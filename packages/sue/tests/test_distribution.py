@@ -102,6 +102,7 @@ def test_capabilities_bind_exact_engine_bytes(release):
     assert set(caps["lenses"]) == set(LENSES)
     identity = caps["engineIdentity"]
     assert identity["algorithm"] == "sha256"
+    assert {"SOURCES.json", "__init__.py", "_loader.py"} <= set(identity["files"])
     for name, digest in identity["files"].items():
         assert (
             hashlib.sha256((Path(castle_sue.__file__).parent / name).read_bytes()).hexdigest()
@@ -109,6 +110,40 @@ def test_capabilities_bind_exact_engine_bytes(release):
         )
     caps["lenses"].clear()
     assert len(castle_sue.capabilities()["lenses"]) == 9
+
+
+@pytest.mark.parametrize("control", ["__init__.py", "_loader.py"])
+def test_engine_identity_changes_with_execution_boundary(release, tmp_path, control):
+    import castle_sue
+
+    original = castle_sue.capabilities()["engineIdentity"]
+    target = tmp_path / "castle_sue"
+    shutil.copytree(release[0] / "installed/castle_sue", target)
+    path = target / control
+    path.write_bytes(path.read_bytes() + b"\n# execution boundary changed\n")
+    script = f"import sys,json; sys.path.insert(0, {str(tmp_path)!r}); import castle_sue; print(json.dumps(castle_sue.capabilities()['engineIdentity']))"
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", script], capture_output=True, text=True, check=True
+    )
+    changed = json.loads(result.stdout)
+    assert (target / "SOURCES.json").read_bytes() == (
+        release[0] / "installed/castle_sue/SOURCES.json"
+    ).read_bytes()
+    assert changed["sourceManifestDigest"] == original["sourceManifestDigest"]
+    assert changed["digest"] != original["digest"]
+
+
+def test_rebuilt_wheel_has_same_execution_identity(release):
+    import castle_sue
+
+    target = release[0] / "rebuilt-installed"
+    with zipfile.ZipFile(release[3]) as archive:
+        archive.extractall(target)
+    script = f"import sys,json; sys.path.insert(0, {str(target)!r}); import castle_sue; print(json.dumps(castle_sue.capabilities()['engineIdentity']))"
+    result = subprocess.run(
+        [sys.executable, "-I", "-c", script], capture_output=True, text=True, check=True
+    )
+    assert json.loads(result.stdout) == castle_sue.capabilities()["engineIdentity"]
 
 
 def test_build_rejects_modified_canonical_snapshot(release, tmp_path):
@@ -199,3 +234,50 @@ def test_repeated_builds_are_reproducible(release, tmp_path):
     build(ROOT, tmp_path, "--wheel", "--sdist")
     assert next(tmp_path.glob("*.whl")).read_bytes() == release[1].read_bytes()
     assert next(tmp_path.glob("*.tar.gz")).read_bytes() == release[2].read_bytes()
+
+
+@pytest.mark.parametrize("order", ["standalone_first", "castle_first", "hostile_aliases"])
+def test_vendor_modules_are_private_and_preserve_legacy_aliases(release, order):
+    installed = release[0] / "installed"
+    script = f"""
+import sys, types, pickle, typing, builtins, importlib.util
+sys.path.insert(0, {str(installed)!r})
+sys.path.insert(0, {str(REPO)!r})
+aliases = ('sue_runner', 'sue_challenge', 'sue_lenses')
+if {order!r} == 'hostile_aliases':
+    for name in aliases:
+        sys.modules[name] = types.ModuleType(name)
+if {order!r} == 'castle_first':
+    from cognitive_castle import brain_engine as legacy
+before = {{name: sys.modules.get(name) for name in aliases}}
+original_import = builtins.__import__
+original_spec = importlib.util.spec_from_file_location
+original_modules = sys.modules
+import castle_sue
+private = castle_sue.brain_engine.vendor
+assert {{name: sys.modules.get(name) for name in aliases}} == before
+assert builtins.__import__ is original_import
+assert importlib.util.spec_from_file_location is original_spec
+assert sys.modules is original_modules
+assert len(castle_sue.capabilities()['lenses']) == 9
+assert private.v1.__name__ == 'castle_sue._vendor.sue.sue_challenge'
+assert private.v1.runner.__name__ == 'castle_sue._vendor.sue.sue_runner'
+assert private.v1.runner.__file__.startswith({str(installed)!r})
+failure = private.v1.ParseFailure(reason='private namespace roundtrip')
+assert pickle.loads(pickle.dumps(failure)) == failure
+typing.get_type_hints(type(failure))
+typing.get_type_hints(private.v1.runner.ModelInvocation)
+if {order!r} == 'standalone_first':
+    from cognitive_castle import brain_engine as legacy
+if {order!r} != 'hostile_aliases':
+    assert private.v1 is not legacy.vendor.v1
+    assert private.v1.runner is not legacy.vendor.v1.runner
+    state = legacy.initial_state('A claim')
+    assert legacy.question(state)
+    assert legacy.advance(state, {{}}, ['A source'])[1] == 'invalid_turn'
+state = castle_sue.initial_state('A claim')
+assert castle_sue.question(state)
+assert castle_sue.advance(state, {{}}, ['A source'])[1] == 'invalid_turn'
+"""
+    result = subprocess.run([sys.executable, "-I", "-c", script], capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr

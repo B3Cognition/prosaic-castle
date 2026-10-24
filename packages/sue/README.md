@@ -30,13 +30,17 @@ implementation correctness. The nine lenses are available independently.
 
 `capabilities()` returns `apiVersion: 1`, `schemaVersion: 2`,
 `policyVersion: "2026-09-24"`, `lenses` and `engineIdentity`. Identity uses
-`algorithm: "sha256"`, a `digest` of the exact bundled `SOURCES.json` bytes,
-and `files`, a mapping from package-relative canonical resource names to their
-SHA-256 hashes. Each call verifies those resources and returns fresh data.
-Missing or changed resources fail closed. A host should retain and compare the
-full engine identity before resuming a frozen review. Build identity binds the
-canonical adapter, vendored engine/policy, licenses and upstream provenance;
-normal package/wheel integrity also binds the discovery wrapper itself.
+`algorithm: "sha256"` and `files`, a mapping from package-relative resource names
+to their SHA-256 hashes. It includes all canonical resources plus `SOURCES.json`,
+the package wrapper `__init__.py`, and `_loader.py`. Its `digest` hashes UTF-8 JSON
+of that complete mapping with sorted keys and compact separators (`,` and `:`).
+`sourceManifestDigest` separately hashes the exact canonical `SOURCES.json` bytes.
+Each call verifies pinned canonical resources and returns fresh data. Missing or
+changed canonical resources fail closed. Wrapper or loader changes alter the
+complete identity even when canonical policy bytes remain identical. A host
+must retain and compare the full engine identity before resuming a frozen
+review, alongside its exact wheel pin. This binds the canonical adapter, vendored
+engine/policy, licenses, upstream provenance and package execution boundary.
 
 ## Canonical sources and builds
 
@@ -50,6 +54,15 @@ The wheel includes Castle's MIT license, Echelon's MIT license and its pinned
 `UPSTREAM.json` (commit `a4286d83427d03b1b1d019c98c68f5d2e0fac741`). All pinned
 vendor files are retained for provenance, including the legacy transport
 helpers; the public pure API never dispatches them.
+
+The package-local loader executes these unchanged sources with qualified
+`castle_sue._vendor.sue` module names. Its private module views route upstream's
+standalone `sue_challenge` and `sue_runner` lookups into that namespace. It never
+replaces Python's global importer, importlib functions or bare `sys.modules`
+aliases, even temporarily. Castle and the standalone distribution can therefore
+coexist in either import order; unrelated preexisting script aliases do not
+select the package's engine helpers. Qualified module registration preserves
+dataclass type-hint lookup and pickling.
 
 ```sh
 python -m build --no-isolation --wheel --sdist packages/sue
