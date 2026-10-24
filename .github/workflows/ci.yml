@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,legacy]"
       # A process watchdog covers import/collection/teardown as well as test calls.
       # Each deadline leaves time to retain diagnostics before the job deadline.
       - name: Main suite with bounded process diagnostics
@@ -53,7 +53,7 @@ jobs:
         with:
           python-version: "3.13"
           cache: 'pip'
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,legacy]"
       # A process watchdog covers import/collection/teardown as well as test calls.
       # Each deadline leaves time to retain diagnostics before the job deadline.
       - name: Main suite with bounded process diagnostics
@@ -88,7 +88,7 @@ jobs:
         with:
           python-version: "3.13"
           cache: 'pip'
-      - run: pip install -e ".[dev]"
+      - run: pip install -e ".[dev,legacy]"
       # A process watchdog covers import/collection/teardown as well as test calls.
       # Each deadline leaves time to retain diagnostics before the job deadline.
       - name: Main suite with bounded process diagnostics

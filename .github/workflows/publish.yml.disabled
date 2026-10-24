@@ -1,3 +1,6 @@
+# Archived upstream workflow: the original Cognitive Castle trusted publisher
+# is not authorized for the independent Prosaic Castle fork. Keep this evidence
+# disabled; this fork has no automatic release or publication workflow.
 # .github/workflows/publish.yml
 name: Publish to PyPI
 

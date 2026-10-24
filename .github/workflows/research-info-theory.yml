@@ -24,7 +24,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install Castle + research deps
         run: |
-          pip install -e .
+          pip install -e ".[legacy]"
           pip install -e research/info_theory[dev]
       - name: Run Tier 1 unit + integration tests
         run: |
@@ -46,7 +46,7 @@ jobs:
           python-version: "3.12"
       - name: Install
         run: |
-          pip install -e .
+          pip install -e ".[legacy]"
           pip install -e research/info_theory[dev]
       - name: Tier 4 — LME-only reproducibility check
         run: |
