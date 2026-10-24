@@ -1,8 +1,8 @@
 [project]
-name = "cognitive-castle"
+name = "prosaic-castle"
 version = "3.4.2"
-description = "Cognitive Castle — local-first persistent memory for AI agents. Verbatim, LanceDB-backed, 3-stage retrieval, no API key required."
-readme = "README.md"
+description = "Prosaic Castle — independent read-only LanceDB memory provider, FTS-first by default."
+readme = "PROSAIC_CASTLE.md"
 requires-python = ">=3.10"
 license = "MIT"
 keywords = [
@@ -23,8 +23,6 @@ classifiers = [
 ]
 dependencies = [
     "lancedb>=0.20",
-    "sentence-transformers>=3.0",
-    "spacy>=3.0.0",
     "pyarrow>=14.0",
     "pyyaml>=6.0,<7",
     "tomli>=2.0.0; python_version < '3.11'",
@@ -34,6 +32,7 @@ dependencies = [
 castle      = "cognitive_castle.cli:main"
 castle-mcp  = "cognitive_castle.mcp_server:main"
 castle-provider = "cognitive_castle.provider_worker:main"
+prosaic-castle-provider = "prosaic_castle.provider_worker:main"
 
 [project.entry-points."cognitive_castle.backends"]
 lancedb = "cognitive_castle.backends.lancedb_backend:LanceDBBackend"
@@ -41,6 +40,8 @@ lancedb = "cognitive_castle.backends.lancedb_backend:LanceDBBackend"
 [project.entry-points."cognitive_castle.sources"]
 
 [project.optional-dependencies]
+dense = ["sentence-transformers>=3.0"]
+legacy = ["sentence-transformers>=3.0", "spacy>=3.0.0"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff==0.15.12", "psutil>=5.9"]
 spellcheck = ["autocorrect>=2.0"]
 gpu    = ["onnxruntime-gpu>=1.16"]
@@ -58,7 +59,7 @@ build-backend = "hatchling.build"
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["cognitive_castle"]
+packages = ["cognitive_castle", "prosaic_castle"]
 
 [tool.ruff]
 required-version = "==0.15.12"
