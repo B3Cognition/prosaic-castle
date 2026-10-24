@@ -1,0 +1,56 @@
+{
+  "formatVersion": 1,
+  "castleRevision": "58f4242080212c2bebcca0c685af0f5e1090aa94",
+  "files": [
+    {
+      "source": "cognitive_castle/brain_engine.py",
+      "destination": "castle_sue/brain_engine.py",
+      "sha256": "9a4e903ff6a3e39cb2723168b740c9746fa789033ebf4c3f6a36aa6fee545cd3"
+    },
+    {
+      "source": "cognitive_castle/_vendor/__init__.py",
+      "destination": "castle_sue/_vendor/__init__.py",
+      "sha256": "6c374b8ee06ce9cf0bffb6e0516abd968c3eef5856a023d0858d8b3bf22191b2"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/LICENSE",
+      "destination": "castle_sue/_vendor/sue/LICENSE",
+      "sha256": "ebe262ea6f82f2ff8c1719f564bb7a4882f7ccc6405013c8a66bef7316f67c19"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/UPSTREAM.json",
+      "destination": "castle_sue/_vendor/sue/UPSTREAM.json",
+      "sha256": "3182021791723c3e9c2c8df8f570a18b6fcda2aa94c6ec7b7b561621d7381332"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/__init__.py",
+      "destination": "castle_sue/_vendor/sue/__init__.py",
+      "sha256": "ccef62f2265a002cf1d4ca01de5a5de451a3c1f2610edf2821444281038d6e94"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/sue_challenge.py",
+      "destination": "castle_sue/_vendor/sue/sue_challenge.py",
+      "sha256": "d4b1d64878a44d2dc922881c68286bf4820bc6a0679868f22ef1fb6747172482"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/sue_dialectic.py",
+      "destination": "castle_sue/_vendor/sue/sue_dialectic.py",
+      "sha256": "ba0523c407f0b96d269412c7f02dd371165944cfe044b8143be526022ae05da0"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/sue_lenses.py",
+      "destination": "castle_sue/_vendor/sue/sue_lenses.py",
+      "sha256": "b26d4c60d95420e2c06eabff6c933df2a25093a6a35ecfe0b07b5cc5b84064ed"
+    },
+    {
+      "source": "cognitive_castle/_vendor/sue/sue_runner.py",
+      "destination": "castle_sue/_vendor/sue/sue_runner.py",
+      "sha256": "3b133597c88bf37d13e9ecae34a68fbd5dad0815cdcdc8431b7625f46c7ac74c"
+    },
+    {
+      "source": "LICENSE",
+      "destination": "castle_sue/LICENSE",
+      "sha256": "81dc6cc278d80f0f1b028ecd86af30d61e441b9ae53d9d9a2ed19389ba657a5d"
+    }
+  ]
+}
