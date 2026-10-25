@@ -42,14 +42,14 @@ lancedb = "cognitive_castle.backends.lancedb_backend:LanceDBBackend"
 [project.optional-dependencies]
 dense = ["sentence-transformers>=3.0"]
 legacy = ["sentence-transformers>=3.0", "spacy>=3.0.0"]
-dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff==0.15.12", "psutil>=5.9"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff==0.17.1", "psutil>=5.9"]
 spellcheck = ["autocorrect>=2.0"]
 gpu    = ["onnxruntime-gpu>=1.16"]
 dml    = ["onnxruntime-directml>=1.16"]
 coreml = ["onnxruntime>=1.16"]
 
 [dependency-groups]
-dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff==0.15.12", "psutil>=5.9"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff==0.17.1", "psutil>=5.9"]
 
 [build-system]
 requires = ["hatchling"]
