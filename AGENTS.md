@@ -1,7 +1,9 @@
 # Prosaic Castle
 
 Independent local fork of Cognitive Castle at
-53637196cc215e9bd5b85b9253b3430b2781b884. No backports, push or publication.
+53637196cc215e9bd5b85b9253b3430b2781b884, maintained independently at
+B3Cognition/prosaic-castle. No backports or pushes to original Castle.
+Push to this fork only when requested. No PyPI publication is authorized.
 Preserve license, provenance, legacy modules, tests and historic evidence.
 
 The Prosaic provider is read-only, scoped, LanceDB-backed and FTS-first.

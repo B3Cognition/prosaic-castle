@@ -1,0 +1,49 @@
+{
+  "templateOnly": true,
+  "observedResults": false,
+  "pilotId": "REPLACE_PRIVATELY",
+  "corpusId": "REPLACE_WITH_FIXED_VERSION",
+  "candidateManifest": "pilot/candidate.json",
+  "candidateManifestSha256": null,
+  "owner": null,
+  "authorization": {
+    "approvedBy": null,
+    "approvedAt": null,
+    "permittedPurpose": null,
+    "excludedSources": [],
+    "colleagueDataSeparatelyAuthorized": false,
+    "retentionDecision": null
+  },
+  "frozenAt": null,
+  "coverageStart": null,
+  "coverageEnd": null,
+  "sourceManifestSha256": null,
+  "sources": [
+    {
+      "relativePath": "REPLACE_WITH_PRIVATE_EXPORT_OR_NOTE_PATH",
+      "sha256": null,
+      "sourceSystem": null,
+      "exportedAt": null,
+      "originalSourceId": null,
+      "authorizationReference": null,
+      "redactions": [],
+      "importedRecordIds": [],
+      "importOutcome": "not_run"
+    }
+  ],
+  "knownGaps": [],
+  "importEnvironmentIdentity": null,
+  "exactImportCommand": null,
+  "palaceInventorySha256": null,
+  "configSha256": null,
+  "workerFingerprint": null,
+  "binding": {
+    "namespace": "REPLACE_WITH_TRUSTED_OWNER_PROJECT_NAMESPACE",
+    "allowedWings": ["REPLACE_WITH_ACTUAL_WING"],
+    "profile": "memory-fts-v1",
+    "recencyBoost": false,
+    "denseEnabled": false,
+    "sueEnabled": false,
+    "modelToolsGranted": false
+  }
+}

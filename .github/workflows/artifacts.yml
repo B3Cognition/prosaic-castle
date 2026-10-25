@@ -1,0 +1,94 @@
+name: Installed artifacts
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  SOURCE_DATE_EPOCH: "1700000000"
+  HF_HUB_OFFLINE: "1"
+  TRANSFORMERS_OFFLINE: "1"
+  HF_HUB_DISABLE_TELEMETRY: "1"
+  DO_NOT_TRACK: "1"
+
+jobs:
+  native-linux:
+    name: Installed wheels / ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Prepare artifact diagnostics
+        run: mkdir -p "$RUNNER_TEMP/castle-artifacts"
+      - name: Verify this is the requested native Linux architecture
+        env:
+          EXPECTED_ARCH: ${{ matrix.arch }}
+        run: python -c 'import os,platform; expected={"amd64":"x86_64","arm64":"aarch64"}[os.environ["EXPECTED_ARCH"]]; assert platform.system()=="Linux"; assert platform.machine()==expected, (platform.machine(), expected); print(platform.system(), platform.machine())' 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/platform.log"
+      - name: Install build tools only
+        run: python -m pip install "build>=1.2" "hatchling>=1.27" "setuptools>=77" wheel 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/build-tools.log"
+      - name: Build all wheels and sdists, then rebuild each sdist
+        timeout-minutes: 6
+        run: |
+          python scripts/ci_build_artifacts.py --project . --output "$RUNNER_TEMP/castle-artifacts/worker" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/worker-build.log"
+          python scripts/ci_build_artifacts.py --project adapters/prosaic --output "$RUNNER_TEMP/castle-artifacts/adapter" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/adapter-build.log"
+          python scripts/ci_build_artifacts.py --project packages/sue --output "$RUNNER_TEMP/castle-artifacts/sue" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/sue-build.log"
+      - name: Install direct wheels in separate clean environments
+        timeout-minutes: 5
+        run: |
+          python -m venv "$RUNNER_TEMP/castle-worker-env"
+          python -m venv "$RUNNER_TEMP/castle-adapter-env"
+          python -m venv "$RUNNER_TEMP/castle-sue-env"
+          "$RUNNER_TEMP/castle-worker-env/bin/python" -m pip install "$RUNNER_TEMP"/castle-artifacts/worker/direct/*.whl "$RUNNER_TEMP"/castle-artifacts/adapter/direct/*.whl "b3-prosaic-runtime==0.9.8" "lancedb==0.40.0" "pyarrow==26.0.0" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/worker-install.log"
+          "$RUNNER_TEMP/castle-adapter-env/bin/python" -m pip install "$RUNNER_TEMP"/castle-artifacts/adapter/direct/*.whl "b3-prosaic-runtime==0.9.8" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/adapter-install.log"
+          "$RUNNER_TEMP/castle-sue-env/bin/python" -m pip install --no-deps "$RUNNER_TEMP"/castle-artifacts/sue/direct/*.whl 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/sue-install.log"
+      - name: Smoke direct and sdist-rebuilt installed wheels outside checkout
+        timeout-minutes: 6
+        working-directory: ${{ runner.temp }}
+        run: |
+          for candidate in direct rebuilt; do
+            if [ "$candidate" = rebuilt ]; then
+              "$RUNNER_TEMP/castle-worker-env/bin/python" -m pip install --force-reinstall --no-deps "$RUNNER_TEMP"/castle-artifacts/worker/rebuilt/*.whl "$RUNNER_TEMP"/castle-artifacts/adapter/rebuilt/*.whl 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/worker-rebuilt-install.log"
+              "$RUNNER_TEMP/castle-adapter-env/bin/python" -m pip install --force-reinstall --no-deps "$RUNNER_TEMP"/castle-artifacts/adapter/rebuilt/*.whl 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/adapter-rebuilt-install.log"
+              "$RUNNER_TEMP/castle-sue-env/bin/python" -m pip install --force-reinstall --no-deps "$RUNNER_TEMP"/castle-artifacts/sue/rebuilt/*.whl 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/sue-rebuilt-install.log"
+            fi
+            "$RUNNER_TEMP/castle-worker-env/bin/python" -I "$GITHUB_WORKSPACE/scripts/ci_installed_smoke.py" --component provider 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/provider-$candidate-smoke.log"
+            "$RUNNER_TEMP/castle-worker-env/bin/python" -I "$GITHUB_WORKSPACE/scripts/ci_installed_smoke.py" --component adapter 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/adapter-worker-$candidate-smoke.log"
+            "$RUNNER_TEMP/castle-adapter-env/bin/python" -I "$GITHUB_WORKSPACE/adapters/prosaic/scripts/wheel_smoke.py" --host-only 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/adapter-host-$candidate-smoke.log"
+            "$RUNNER_TEMP/castle-sue-env/bin/python" -I -c 'import castle_sue, sys; from pathlib import Path; from importlib.metadata import distribution; assert Path(castle_sue.__file__).resolve().is_relative_to(Path(sys.prefix).resolve()); assert not distribution("cognitive-castle-sue").requires' 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/sue-$candidate-ownership.log"
+            "$RUNNER_TEMP/castle-sue-env/bin/python" -I "$GITHUB_WORKSPACE/packages/sue/tests/standalone_smoke.py" 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/sue-$candidate-smoke.log"
+          done
+          for component in worker adapter sue; do
+            "$RUNNER_TEMP/castle-$component-env/bin/python" -m pip check 2>&1 | tee "$RUNNER_TEMP/castle-artifacts/$component-pip-check.log"
+          done
+      - name: Retain package artifacts and diagnostics on success or failure
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: installed-artifacts-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/castle-artifacts/*.log
+            ${{ runner.temp }}/castle-artifacts/*/qualification.json
+            ${{ runner.temp }}/castle-artifacts/*/direct/*.whl
+            ${{ runner.temp }}/castle-artifacts/*/direct/*.tar.gz
+            ${{ runner.temp }}/castle-artifacts/*/rebuilt/*.whl
+          if-no-files-found: error
+          retention-days: 90

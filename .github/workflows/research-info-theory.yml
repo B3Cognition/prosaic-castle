@@ -1,6 +1,9 @@
 # .github/workflows/research-info-theory.yml
 name: Research — info_theory
 
+permissions:
+  contents: read
+
 on:
   push:
     paths:

@@ -1,3 +1,24 @@
+# Prosaic Castle
+
+Independent Prosaic memory provider and separately installable experimental SUE
+engine. This repository preserves Cognitive Castle history and legacy modes.
+The pilot provider uses scoped, read-only LanceDB FTS; dense retrieval and
+recency boosting are opt-in. Memory and SUE remain disabled in the host until
+explicitly enabled. Installing a package enables neither.
+
+Start with [install and smoke instructions](PROSAIC_CASTLE.md), the
+[three-package candidate manifest](pilot/candidate.json), and the
+[real-world memory pilot](docs/pilot/README.md). Candidates are unpublished;
+there is no PyPI publishing workflow. CI fixtures establish mechanics, not
+real-world usefulness. SUE is advisory and has no demonstrated incremental
+review-quality benefit in the current Lab comparison.
+
+The original Cognitive Castle documentation is retained below for compatibility;
+its install commands, model runners and feature claims describe that project,
+not the default Prosaic provider profile. Never coinstall both distributions.
+
+---
+
 <div align="center">
 
 # Cognitive Castle

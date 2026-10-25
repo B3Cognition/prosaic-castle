@@ -114,19 +114,27 @@ def test_repeated_cycle_stops_without_claiming_missing_dimensions():
     from cognitive_castle import brain_engine as engine
 
     state = engine.initial_state(CLAIM, cycle_guard=True)
-    for op, result in [('DEFINE','ESTABLISHED'), ('DISTINGUISH','INCOMPLETE'),
-                       ('DIVIDE','ESTABLISHED'), ('DISTINGUISH','INCOMPLETE'),
-                       ('DIVIDE','ESTABLISHED')]:
-        assert state['operator'] == op
+    for op, result in [
+        ("DEFINE", "ESTABLISHED"),
+        ("DISTINGUISH", "INCOMPLETE"),
+        ("DIVIDE", "ESTABLISHED"),
+        ("DISTINGUISH", "INCOMPLETE"),
+        ("DIVIDE", "ESTABLISHED"),
+    ]:
+        assert state["operator"] == op
         state, error = engine.advance(state, answer(op, result), SOURCE.splitlines())
         assert error is None
-    assert state['terminal'] == 'BOUNDED_STOP'
-    assert state['turns'][-1]['stop_reason'] == 'repeated_cycle_no_progress'
-    assert engine.coverage(state)['missing'] == [
-        'DISTINGUISH','CAUSE_OR_CRITERION','COUNTEREXAMPLE',
-        'FOLLOW_CONSEQUENCE','TEST_OPPOSITE']
-    assert len(engine.coverage(state)['open_issues']) == 2
-    assert engine.advance(state, {}, SOURCE.splitlines()) == (state, 'engine_terminal')
+    assert state["terminal"] == "BOUNDED_STOP"
+    assert state["turns"][-1]["stop_reason"] == "repeated_cycle_no_progress"
+    assert engine.coverage(state)["missing"] == [
+        "DISTINGUISH",
+        "CAUSE_OR_CRITERION",
+        "COUNTEREXAMPLE",
+        "FOLLOW_CONSEQUENCE",
+        "TEST_OPPOSITE",
+    ]
+    assert len(engine.coverage(state)["open_issues"]) == 2
+    assert engine.advance(state, {}, SOURCE.splitlines()) == (state, "engine_terminal")
 
 
 def test_cycle_guard_retains_legacy_and_new_information():
@@ -134,29 +142,40 @@ def test_cycle_guard_retains_legacy_and_new_information():
 
     legacy = engine.initial_state(CLAIM)
     guarded = engine.initial_state(CLAIM, cycle_guard=True)
-    assert 'cycle_guard' not in legacy
-    for i, (op,result) in enumerate([
-        ('DEFINE','ESTABLISHED'), ('DISTINGUISH','INCOMPLETE'),
-        ('DIVIDE','ESTABLISHED'), ('DISTINGUISH','INCOMPLETE'),
-        ('DIVIDE','ESTABLISHED')]):
-        value = answer(op,result,answer=f'A distinct examined case {i}.')
-        legacy, error = engine.advance(legacy,value,SOURCE.splitlines())
-        guarded, other = engine.advance(guarded,value,SOURCE.splitlines())
+    assert "cycle_guard" not in legacy
+    for i, (op, result) in enumerate(
+        [
+            ("DEFINE", "ESTABLISHED"),
+            ("DISTINGUISH", "INCOMPLETE"),
+            ("DIVIDE", "ESTABLISHED"),
+            ("DISTINGUISH", "INCOMPLETE"),
+            ("DIVIDE", "ESTABLISHED"),
+        ]
+    ):
+        value = answer(op, result, answer=f"A distinct examined case {i}.")
+        legacy, error = engine.advance(legacy, value, SOURCE.splitlines())
+        guarded, other = engine.advance(guarded, value, SOURCE.splitlines())
         assert error is other is None
-    assert guarded['terminal'] is legacy['terminal'] is None
-    before = __import__('copy').deepcopy(guarded)
-    invalid = answer('DISTINGUISH','INCOMPLETE',evidence=[{'line':1,'quote':'invented'}])
-    assert engine.advance(guarded,invalid,SOURCE.splitlines()) == (before,'invalid_turn')
+    assert guarded["terminal"] is legacy["terminal"] is None
+    before = __import__("copy").deepcopy(guarded)
+    invalid = answer("DISTINGUISH", "INCOMPLETE", evidence=[{"line": 1, "quote": "invented"}])
+    assert engine.advance(guarded, invalid, SOURCE.splitlines()) == (before, "invalid_turn")
 
 
 def test_cycle_guard_allows_addressing_a_previously_open_issue():
     from cognitive_castle import brain_engine as engine
 
     state = engine.initial_state(CLAIM, cycle_guard=True)
-    for op,result,refs in [('DEFINE','ESTABLISHED',[]),('DISTINGUISH','INCOMPLETE',[]),
-                           ('DIVIDE','ESTABLISHED',[]),('DISTINGUISH','INCOMPLETE',[]),
-                           ('DIVIDE','ESTABLISHED',[2,4])]:
-        state,error = engine.advance(state,answer(op,result,addresses=refs),SOURCE.splitlines())
+    for op, result, refs in [
+        ("DEFINE", "ESTABLISHED", []),
+        ("DISTINGUISH", "INCOMPLETE", []),
+        ("DIVIDE", "ESTABLISHED", []),
+        ("DISTINGUISH", "INCOMPLETE", []),
+        ("DIVIDE", "ESTABLISHED", [2, 4]),
+    ]:
+        state, error = engine.advance(
+            state, answer(op, result, addresses=refs), SOURCE.splitlines()
+        )
         assert error is None
-    assert state['terminal'] is None
-    assert engine.coverage(state)['open_issues'] == []
+    assert state["terminal"] is None
+    assert engine.coverage(state)["open_issues"] == []

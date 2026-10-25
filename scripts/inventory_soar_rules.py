@@ -18,13 +18,28 @@ _DEFAULT_ROOTS = [
     "/Users/michalbachorik/work/prosaics/prosaic-runtime",
     "/Users/michalbachorik/work/prosaics/prosaic-integration-lab",
 ]
-_SKIP_DIRS = {".git", ".venv", "venv", "node_modules", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
+_SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+}
 _CONFIG_EXTENSIONS = {".toml", ".yaml", ".yml", ".json", ".jsonc", ".ini", ".cfg", ".env"}
 _KEY = re.compile(r"\b(soar_rules_path|CASTLE_SOAR_RULES(?:_PATH)?)\b")
 
 
 def inventory(roots):
-    report = {"schema_version": 1, "roots": [], "rules": [], "config_occurrences": [], "unreadable_paths": []}
+    report = {
+        "schema_version": 1,
+        "roots": [],
+        "rules": [],
+        "config_occurrences": [],
+        "unreadable_paths": [],
+    }
     for supplied in sorted(set(map(str, roots))):
         root = Path(supplied).absolute()
         report["roots"].append({"path": str(root), "exists": root.is_dir()})
@@ -35,13 +50,21 @@ def inventory(roots):
             report["unreadable_paths"].append(str(error.filename))
 
         for directory, dirs, files in os.walk(root, followlinks=False, onerror=unreadable):
-            dirs[:] = sorted(name for name in dirs if name not in _SKIP_DIRS and not Path(directory, name).is_symlink())
+            dirs[:] = sorted(
+                name
+                for name in dirs
+                if name not in _SKIP_DIRS and not Path(directory, name).is_symlink()
+            )
             for name in sorted(files):
                 path = Path(directory, name)
                 if path.is_symlink():
                     continue
                 is_rule = path.suffix.lower() == ".soar"
-                is_config = path.suffix.lower() in _CONFIG_EXTENSIONS or name == ".env" or name.startswith(".env.")
+                is_config = (
+                    path.suffix.lower() in _CONFIG_EXTENSIONS
+                    or name == ".env"
+                    or name.startswith(".env.")
+                )
                 if not (is_rule or is_config):
                     continue
                 try:
@@ -51,12 +74,21 @@ def inventory(roots):
                     continue
                 if is_rule:
                     digest = hashlib.sha256(data).hexdigest()
-                    report["rules"].append({"path": str(path), "sha256": digest,
-                                            "kind": "shipped-exact" if digest == _SHIPPED_SHA256 else "custom"})
+                    report["rules"].append(
+                        {
+                            "path": str(path),
+                            "sha256": digest,
+                            "kind": "shipped-exact" if digest == _SHIPPED_SHA256 else "custom",
+                        }
+                    )
                 if is_config:
-                    for number, line in enumerate(data.decode("utf-8", errors="replace").splitlines(), 1):
+                    for number, line in enumerate(
+                        data.decode("utf-8", errors="replace").splitlines(), 1
+                    ):
                         for key in sorted(set(_KEY.findall(line))):
-                            report["config_occurrences"].append({"path": str(path), "line": number, "key": key})
+                            report["config_occurrences"].append(
+                                {"path": str(path), "line": number, "key": key}
+                            )
     report["rules"].sort(key=lambda row: row["path"])
     report["config_occurrences"].sort(key=lambda row: (row["path"], row["line"], row["key"]))
     report["unreadable_paths"].sort()
@@ -65,7 +97,11 @@ def inventory(roots):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", action="append", help="Repeat for each local root; defaults to the five workspaces")
+    parser.add_argument(
+        "--root",
+        action="append",
+        help="Repeat for each local root; defaults to the five workspaces",
+    )
     args = parser.parse_args()
     print(json.dumps(inventory(args.root or _DEFAULT_ROOTS), indent=2))
 

@@ -20,11 +20,23 @@ from .query_intent import classify_query
 POLICY_VERSION = "castle-shipped-v1"
 SHIPPED_RULES_SHA256 = "2f733306d6e5464cd2d63a1b639650a9730953b6217469d054fd05ce076821f9"
 _RULES = Path(__file__).parent / "rules" / "castle-boost.soar"
-_MULTIPLIERS = {"recency-boost": 1.25, "same-project": 1.15,
-                "entity-match": 1.30, "type-match": 1.25}
-_ROOM_TYPES = {"decisions": "decision", "problems": "problem", "preferences": "preference",
-               "milestones": "milestone", "decision": "decision", "problem": "problem",
-               "preference": "preference", "milestone": "milestone", "emotional": "emotional"}
+_MULTIPLIERS = {
+    "recency-boost": 1.25,
+    "same-project": 1.15,
+    "entity-match": 1.30,
+    "type-match": 1.25,
+}
+_ROOM_TYPES = {
+    "decisions": "decision",
+    "problems": "problem",
+    "preferences": "preference",
+    "milestones": "milestone",
+    "decision": "decision",
+    "problem": "problem",
+    "preference": "preference",
+    "milestone": "milestone",
+    "emotional": "emotional",
+}
 
 
 class UnsupportedRulesError(ValueError):
@@ -38,7 +50,9 @@ def _validate_rules(rules_path):
     except OSError as exc:
         raise UnsupportedRulesError("custom or unreadable SOAR rules are unsupported") from exc
     if digest != SHIPPED_RULES_SHA256:
-        raise UnsupportedRulesError("custom SOAR rules are unsupported; only exact shipped bytes are accepted")
+        raise UnsupportedRulesError(
+            "custom SOAR rules are unsupported; only exact shipped bytes are accepted"
+        )
 
 
 def _age(created_at, now):
@@ -80,9 +94,14 @@ def apply_shipped_boosts(hits, *, query="", project="default", now, rules_path=N
     result = deepcopy(list(hits))
     identities = set()
     for hit in result:
-        identity = str(hit.get("id") or f"{hit.get('wing', '')}/{hit.get('room', '')}/{hit.get('source_file', '?')}")
+        identity = str(
+            hit.get("id")
+            or f"{hit.get('wing', '')}/{hit.get('room', '')}/{hit.get('source_file', '?')}"
+        )
         if identity in identities:
-            raise ValueError("duplicate legacy memory identity; unique drawer identities are required")
+            raise ValueError(
+                "duplicate legacy memory identity; unique drawer identities are required"
+            )
         identities.add(identity)
     query_type = classify_query(query)
     eligible = result[:50]
@@ -125,7 +144,9 @@ def apply_shipped_to_reranked(reranked, *, query="", project="default", now, rul
             except (ValueError, TypeError, AttributeError):
                 row["created_at"] = ""
         hits.append(row)
-    boosted = apply_shipped_boosts(hits, query=query, project=project, now=now, rules_path=rules_path)
+    boosted = apply_shipped_boosts(
+        hits, query=query, project=project, now=now, rules_path=rules_path
+    )
     result = [(hit["score"], hit) for hit in boosted]
     if any(hit.get("soar_boost", 1.0) != 1.0 for hit in boosted):
         result.sort(key=lambda pair: -pair[0])

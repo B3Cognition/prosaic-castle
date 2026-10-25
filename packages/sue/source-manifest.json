@@ -5,7 +5,7 @@
     {
       "source": "cognitive_castle/brain_engine.py",
       "destination": "castle_sue/brain_engine.py",
-      "sha256": "105015c8a94a4f82166e319e1ecc58c34237369160a312854c021c41e780422d"
+      "sha256": "9553aa7e138cbc5c132f6fd81b01d0a011c8b21afcb2b5bd29e5c571791afe3a"
     },
     {
       "source": "cognitive_castle/_vendor/__init__.py",

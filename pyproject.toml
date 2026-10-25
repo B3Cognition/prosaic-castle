@@ -61,6 +61,11 @@ allow-direct-references = true
 [tool.hatch.build.targets.wheel]
 packages = ["cognitive_castle", "prosaic_castle"]
 
+[tool.hatch.build.targets.sdist]
+# Bundle hashes live in the repository; embedding them would make the archive
+# depend on its own digest. Runtime source and legacy archive contents remain.
+exclude = ["/pilot/candidate.json"]
+
 [tool.ruff]
 required-version = "==0.15.12"
 line-length = 100

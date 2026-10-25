@@ -1,0 +1,76 @@
+{
+  "templateOnly": true,
+  "queryId": "q01",
+  "corpusId": "REPLACE_WITH_FIXED_VERSION",
+  "question": "REPLACE_WITH_REAL_DEVELOPMENT_RECALL_QUESTION",
+  "query": "REPLACE_BEFORE_RETRIEVAL",
+  "scope": {
+    "owner": null,
+    "namespace": null,
+    "allowedWings": [],
+    "sourceCutoff": null,
+    "sourceManifestSha256": null
+  },
+  "sealedBeforeRetrieval": {
+    "writtenAt": null,
+    "expectationFileSha256RecordedSeparately": null,
+    "expectedSources": [
+      {
+        "relativePath": null,
+        "sourceSha256": null,
+        "span": null,
+        "exactQuote": null,
+        "expectedSourceId": null
+      }
+    ],
+    "targetAnswer": null,
+    "expectedAbstention": false,
+    "allowedUncertainty": null,
+    "taskCapSeconds": 300,
+    "methodOrder": null
+  },
+  "baseline": {
+    "method": "manual search and browsing of the same frozen exports",
+    "searchTerms": [],
+    "openedSourcesAndSpans": [],
+    "firstAnswer": null,
+    "humanElapsedSeconds": null,
+    "status": "not_run",
+    "usefulness0to3": null,
+    "materiallyWrong": null
+  },
+  "memory": {
+    "profile": "memory-fts-v1",
+    "recencyBoost": false,
+    "limit": 5,
+    "rawSearchResultFile": null,
+    "selectedRecordIds": [],
+    "selectedProvenance": [],
+    "fetchedSlicesFile": null,
+    "snapshotFile": null,
+    "snapshotDigest": null,
+    "coldStartupSeconds": null,
+    "searchSeconds": null,
+    "fetchSeconds": null,
+    "snapshotSeconds": null,
+    "humanElapsedSeconds": null,
+    "firstAnswer": null,
+    "status": "not_run",
+    "errorCode": null,
+    "usefulness0to3": null,
+    "materiallyWrong": null
+  },
+  "assessment": {
+    "expectedEvidenceFoundByBaseline": null,
+    "expectedEvidenceFoundByMemory": null,
+    "provenanceCorrect": null,
+    "wrongEvidence": [],
+    "staleEvidence": [],
+    "conflictingEvidence": [],
+    "importCoverageLoss": [],
+    "potentialWrongDevelopmentAction": null,
+    "currentVerificationNeeded": null,
+    "methodOrderCarryover": null,
+    "humanNotes": null
+  }
+}
