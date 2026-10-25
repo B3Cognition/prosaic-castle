@@ -13,10 +13,12 @@ from types import SimpleNamespace
 from ._vendor.sue import sue_dialectic as vendor
 
 
-def initial_state(seed: str, *, lens: str = "euthyphro", max_turns: int = 14) -> dict:
-    if lens not in vendor.LENSES or type(max_turns) is not int or not 1 <= max_turns <= 14:
+def initial_state(seed: str, *, lens: str = "euthyphro", max_turns: int = 14,
+                  cycle_guard: bool = False) -> dict:
+    if (lens not in vendor.LENSES or type(max_turns) is not int or not 1 <= max_turns <= 14
+            or type(cycle_guard) is not bool):
         raise ValueError("invalid engine configuration")
-    return dict(
+    state = dict(
         lens=lens,
         seed=seed,
         claim=seed,
@@ -28,6 +30,35 @@ def initial_state(seed: str, *, lens: str = "euthyphro", max_turns: int = 14) ->
         max_turns=max_turns,
         turns=[],
     )
+    if cycle_guard:
+        state['cycle_guard'] = 'repeated-cycle-v1'
+    return state
+
+
+def _repeated_cycle(turns, lens):
+    """Exact substantive repetition, with no coverage or issue-resolution gain.
+
+    Turn numbers and addresses are bookkeeping; resolving a previously open
+    issue is checked independently before disregarding those references.
+    New claims, quotations, premises, arguments or questions break the cycle.
+    """
+    def substantive(turn):
+        return {k:v for k,v in asdict(turn).items()
+                if k not in {'turn_no','addresses','stop_reason'}}
+
+    for size in range(1, len(turns)//2 + 1):
+        if [substantive(t) for t in turns[-size:]] != [
+                substantive(t) for t in turns[-2*size:-size]]:
+            continue
+        before = vendor.depth_profile(turns[:-size], lens)
+        after = vendor.depth_profile(turns, lens)
+        if before['missing'] != after['missing']:
+            continue
+        status = {i['turn']:i['status'] for i in after['issues']}
+        if any(i['status']=='open' and status[i['turn']]!='open' for i in before['issues']):
+            continue
+        return True
+    return False
 
 
 def question(state: dict) -> str | None:
@@ -104,7 +135,11 @@ def advance(state: dict, response: dict, lines: list[str]) -> tuple[dict, str | 
         new["failure"] = turn.answer
     if step == "RESOLVED" and (profile["missing"] or profile["open_issues"]):
         step = "APORIA_UNDERDETERMINED"
-    if step in vendor.TERMINALS:
+    if (step not in vendor.TERMINALS and new.get('cycle_guard') == 'repeated-cycle-v1'
+            and _repeated_cycle(turns, new['lens'])):
+        turns[-1] = replace(turn, stop_reason='repeated_cycle_no_progress')
+        new['terminal'] = 'BOUNDED_STOP'
+    elif step in vendor.TERMINALS:
         why = (
             "revision_budget_exhausted"
             if step == "BOUNDED_STOP"
