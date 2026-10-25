@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash --noprofile --norc -euo pipefail {0}
+
 env:
   SOURCE_DATE_EPOCH: "1700000000"
   HF_HUB_OFFLINE: "1"

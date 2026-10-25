@@ -7,11 +7,33 @@ import tarfile
 import zipfile
 import subprocess
 import sys
+import shlex
+import shutil
+
+import yaml
 
 import pytest
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts/ci_build_artifacts.py"
+
+
+def test_artifact_pipeline_does_not_hide_a_failing_command(tmp_path):
+    workflow = yaml.safe_load((SCRIPT.parents[1] / ".github/workflows/artifacts.yml").read_text())
+    shell = workflow.get("defaults", {}).get("run", {}).get("shell", "bash -e {0}")
+    if shell == "bash":
+        shell = "bash --noprofile --norc -eo pipefail {0}"
+    script = tmp_path / "pipeline.sh"
+    script.write_text("printf exercised > marker.log\nfalse | tee pipeline.log\nexit 0\n")
+    command = [part.replace("{0}", script.as_posix()) for part in shlex.split(shell)]
+    if sys.platform == "win32":
+        # Match GitHub's documented Git-for-Windows bash, rather than a WSL stub.
+        git = Path(shutil.which("git"))
+        command[0] = str(git.parent.parent / "bin/bash.exe")
+    result = subprocess.run(command, cwd=tmp_path, capture_output=True, text=True, timeout=10)
+    assert (tmp_path / "marker.log").read_text() == "exercised"
+    assert (tmp_path / "pipeline.log").is_file()
+    assert result.returncode != 0, "tee hid the failed qualification command"
 
 
 def load_gate():
