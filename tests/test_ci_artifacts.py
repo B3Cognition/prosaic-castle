@@ -24,7 +24,7 @@ def test_artifact_pipeline_does_not_hide_a_failing_command(tmp_path):
     if shell == "bash":
         shell = "bash --noprofile --norc -eo pipefail {0}"
     script = tmp_path / "pipeline.sh"
-    script.write_text("printf exercised > marker.log\nfalse | tee pipeline.log\nexit 0\n")
+    script.write_bytes(b"printf exercised > marker.log\nfalse | tee pipeline.log\nexit 0\n")
     command = [part.replace("{0}", script.as_posix()) for part in shlex.split(shell)]
     if sys.platform == "win32":
         # Match GitHub's documented Git-for-Windows bash, rather than a WSL stub.
