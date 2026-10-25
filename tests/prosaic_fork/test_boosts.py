@@ -2,7 +2,7 @@
 
 import builtins
 from copy import deepcopy
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import importlib
 import json
 from pathlib import Path
@@ -160,6 +160,17 @@ def test_custom_rules_rejected_even_empty_input_and_exact_shipped_copy_allowed(t
         boost.apply_shipped_boosts([], now=NOW, rules_path=tmp_path / "missing")
 
 
+def test_crlf_modified_shipped_rules_remain_rejected(tmp_path):
+    boost = api()
+    canonical = RULES.read_bytes()
+    assert b"\r\n" not in canonical
+    modified = tmp_path / "crlf.soar"
+    modified.write_bytes(canonical.replace(b"\n", b"\r\n"))
+    assert modified.read_bytes() != canonical
+    with pytest.raises(boost.UnsupportedRulesError, match="exact shipped bytes"):
+        boost.apply_shipped_boosts([], now=NOW, rules_path=modified)
+
+
 def test_now_is_explicit_and_finite():
     boost = api()
     with pytest.raises(TypeError):
@@ -263,17 +274,48 @@ def test_naive_timestamp_preserves_legacy_local_timezone(monkeypatch, zone, want
     from cognitive_castle import soar_bridge as legacy
 
     boost = api()
-    monkeypatch.setenv("TZ", zone)
-    time.tzset()
+    tzset = getattr(time, "tzset", None)
     try:
-        result = boost.apply_shipped_boosts(
-            [{"score": 1.0, "created_at": "2026-10-16T00:00:00"}], now=NOW
-        )
-        assert result[0]["score"] == want
-        assert (legacy._compute_age_seconds("2026-10-16T00:00:00", NOW) < 604800) == (want == 1.25)
+        with monkeypatch.context() as patch:
+            if tzset is not None:
+                patch.setenv("TZ", zone)
+                tzset()
+            else:
+                # Windows cannot change the process TZ through time.tzset.
+                # Control only parsing for this 2026-10-16 fixture; real
+                # datetime.timestamp still computes both implementations' ages.
+                offset = {"UTC": 0, "Europe/Prague": 2, "America/New_York": -4}[zone]
+
+                class FixtureDateTime:
+                    @staticmethod
+                    def fromisoformat(value):
+                        parsed = datetime.fromisoformat(value)
+                        if parsed.tzinfo is None:
+                            parsed = parsed.replace(tzinfo=timezone(timedelta(hours=offset)))
+                        return parsed
+
+                aware = FixtureDateTime.fromisoformat("2026-10-16T00:00:00+00:00")
+                assert type(aware) is datetime and aware.utcoffset() == timedelta(0)
+                patch.setattr(boost, "datetime", FixtureDateTime)
+                patch.setattr(legacy, "datetime", FixtureDateTime)
+            result = boost.apply_shipped_boosts(
+                [{"score": 1.0, "created_at": "2026-10-16T00:00:00"}], now=NOW
+            )
+            assert result[0]["score"] == want
+            assert (legacy._compute_age_seconds("2026-10-16T00:00:00", NOW) < 604800) == (
+                want == 1.25
+            )
     finally:
-        monkeypatch.undo()
-        time.tzset()
+        if tzset is not None:
+            tzset()
+
+
+@pytest.mark.parametrize(
+    "zone,want", [("UTC", 1.0), ("Europe/Prague", 1.0), ("America/New_York", 1.25)]
+)
+def test_naive_timestamp_without_tzset_keeps_same_scores_and_legacy_parity(monkeypatch, zone, want):
+    monkeypatch.delattr(time, "tzset", raising=False)
+    test_naive_timestamp_preserves_legacy_local_timezone(monkeypatch, zone, want)
 
 
 def test_inventory_reports_rule_hashes_and_config_locations_without_values(tmp_path):

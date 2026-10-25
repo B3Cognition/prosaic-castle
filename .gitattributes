@@ -1,2 +1,12 @@
-# Vendored source bytes are checked against the pinned upstream SHA-256 digests.
+# These canonical SUE inputs are checked against pinned SHA-256 digests.
+LICENSE text eol=lf
+cognitive_castle/brain_engine.py text eol=lf
+cognitive_castle/_vendor/__init__.py text eol=lf
+cognitive_castle/_vendor/sue/LICENSE text eol=lf
+cognitive_castle/_vendor/sue/UPSTREAM.json text eol=lf
 cognitive_castle/_vendor/sue/*.py text eol=lf
+# These wrapper/control bytes are included in the standalone engine identity.
+packages/sue/src/castle_sue/*.py text eol=lf
+packages/sue/source-manifest.json text eol=lf
+# The deterministic boost profile accepts only this exact shipped rules digest.
+cognitive_castle/rules/castle-boost.soar text eol=lf
