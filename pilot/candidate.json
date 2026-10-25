@@ -15,6 +15,12 @@
   },
   "sourceDateEpoch": 1700000000,
   "qualifiedRuntime": "b3-prosaic-runtime==0.9.8",
+  "qualifiedArtifactSource": {
+    "commit": "e87fb9dc40ac9ff1d2c4628737b431edad3b46f9",
+    "runId": 40221007879,
+    "artifactName": "installed-artifacts-amd64",
+    "url": "https://github.com/B3Cognition/prosaic-castle/actions/runs/40221007879"
+  },
   "packages": [
     {
       "distribution": "prosaic-castle",
@@ -29,8 +35,8 @@
         {
           "kind": "sdist",
           "filename": "worker/prosaic_castle-3.4.2.tar.gz",
-          "sha256": "245828775b5bcfaf97e9d3755e6b4c3a35e5a1e08d82eeff7e1c99c560ef9088",
-          "bytes": 5812262
+          "sha256": "98c24dae46b0d1edb48dcd2a7dd0a23239da8a616d90782a37fd57ced0254a16",
+          "bytes": 5812271
         }
       ]
     },
@@ -47,8 +53,8 @@
         {
           "kind": "sdist",
           "filename": "adapter/b3_prosaic_memory_castle-0.1.0.tar.gz",
-          "sha256": "0c802352f725d91880257fe6d5b333d79ec21f44d6267eb71516f881ff8bab83",
-          "bytes": 27077
+          "sha256": "8c94110544c173ae683d2ed6ab901b7306d91747e565b04f195a64934465aaaa",
+          "bytes": 26969
         }
       ]
     },

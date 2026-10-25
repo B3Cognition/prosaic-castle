@@ -10,6 +10,7 @@ Use the matching unpublished bundle identified by
 [`pilot/candidate.json`](../../pilot/candidate.json) and the installation and
 smoke instructions in [Prosaic Castle](../../PROSAIC_CASTLE.md). The manifest
 identifies artifacts; it does not grant source access or establish pilot quality.
+The [download walkthrough](get-bundle.md) obtains that exact bundle from GitHub.
 Do not substitute same-version wheels from historical bundles. Worker and host
 use separate environments; never coinstall `cognitive-castle` with
 `prosaic-castle`. This pilot does not publish packages to PyPI.
